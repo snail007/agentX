@@ -1,0 +1,9 @@
+[web]
+HttpPort = 9091
+RunMode = "dev"
+
+[log]
+level = ["info","error","debug"]
+dir = "log"
+FileMaxSize = 102400000
+MaxCount = 3
