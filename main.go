@@ -19,12 +19,15 @@ type Hook struct {
 }
 
 func (h *Hook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Hook called")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
 	w.Header().Set("Access-Control-Allow-Methods", "POST,OPTIONS")
 	if r.Method == "OPTIONS" {
 		return
+	}
+	user, pass, ok := r.BasicAuth()
+	if ok {
+		log.Infof("user:%s,pass:%s", user, pass)
 	}
 	h.f.ServeHTTP(w, r)
 }
@@ -44,6 +47,10 @@ func main() {
 	h := new(Hook)
 	h.f = s
 	beego.Handler("/", h)
-	beego.Run()
+	go beego.Run()
+	go func() {
+		http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./clients/js"))))
+		http.ListenAndServe(":25900", nil)
+	}()
 	select {}
 }
