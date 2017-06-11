@@ -1,6 +1,8 @@
 package main
 
 import (
+	"agentX/utils"
+
 	"github.com/snail007/mini-logger"
 	"github.com/snail007/mini-logger/writers/console"
 	"github.com/snail007/mini-logger/writers/files"
@@ -36,13 +38,13 @@ func initLog() {
 	cfgF.MaxBytes = cfg.GetInt64("log.FileMaxSize")
 	cfgF.MaxCount = cfg.GetInt("log.MaxCount")
 	cfgLevels := cfg.GetStringSlice("log.level")
-	if ok, _ := inArray("debug", cfgLevels); ok {
+	if ok, _ := utils.InArray("debug", cfgLevels); ok {
 		cfgF.FileNameSet["debug"] = logger.AllLevels
 	}
-	if ok, _ := inArray("info", cfgLevels); ok {
+	if ok, _ := utils.InArray("info", cfgLevels); ok {
 		cfgF.FileNameSet["info"] = logger.InfoLevel
 	}
-	if ok, _ := inArray("error", cfgLevels); ok {
+	if ok, _ := utils.InArray("error", cfgLevels); ok {
 		cfgF.FileNameSet["error"] = logger.WarnLevel | logger.ErrorLevel | logger.FatalLevel
 	}
 	log.AddWriter(files.New(cfgF), logger.AllLevels)

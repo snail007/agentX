@@ -1,6 +1,5 @@
-[web]
-HttpPort = 9091
-RunMode = "dev"
+[rpc]
+listen = ":9091"
 
 [log]
 level = ["info","error","debug"]
