@@ -10,13 +10,15 @@ import (
 
 	"os"
 
-	"github.com/snail007/rpc/v2"
-	"github.com/snail007/rpc/v2/json2"
+	jsonrpc "github.com/gorilla/rpc/v2"
+	"github.com/gorilla/rpc/v2/json2"
+	"github.com/julienschmidt/httprouter"
 )
 
-type Hook struct {
-	f http.Handler
-}
+var (
+	jsonRpc = jsonrpc.NewServer()
+)
+
 type serverRequest struct {
 	// JSON-RPC protocol.
 	Version string `json:"jsonrpc"`
@@ -33,7 +35,8 @@ type serverRequest struct {
 	Id *json.RawMessage `json:"id"`
 }
 
-func (h *Hook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func serveHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
 	w.Header().Set("Access-Control-Allow-Methods", "POST,OPTIONS")
@@ -51,7 +54,8 @@ func (h *Hook) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	h.f.ServeHTTP(w, r)
+
+	jsonRpc.ServeHTTP(w, r)
 }
 func check(u, p string) bool {
 	return true
@@ -65,20 +69,20 @@ func main() {
 	}
 	initLog()
 	log.Info("agentX service stared")
-	s := rpc.NewServer()
-	s.RegisterCodec(json2.NewCodec(), "application/json")
+	jsonRpc.RegisterCodec(json2.NewCodec(), "application/json")
 
 	//注册plugins下面的rpc服务
-	s.RegisterService(new(gitx.Gitx), "git")
-	s.RegisterService(new(systemx.SystemX), "system")
-	//
+	jsonRpc.RegisterService(new(gitx.Gitx), "git")
+	jsonRpc.RegisterService(new(systemx.SystemX), "system")
 
-	h := new(Hook)
-	h.f = s
-	go http.ListenAndServe(cfg.GetString("rpc.listen"), h)
+	router := httprouter.New()
+	router.Handle("GET", "/:token", serveHTTP)
+	router.Handle("POST", "/:token", serveHTTP)
+	router.Handle("OPTIONS", "/:token", serveHTTP)
+
+	go http.ListenAndServe(cfg.GetString("rpc.listen"), router)
 	go func() {
-		http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./clients/js"))))
-		http.ListenAndServe(":25900", nil)
+		http.ListenAndServe(":25900", http.StripPrefix("/", http.FileServer(http.Dir("./clients/js"))))
 	}()
 	select {}
 }
