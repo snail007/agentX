@@ -10,8 +10,8 @@ import (
 
 	"os"
 
-	"github.com/gorilla/rpc/v2"
-	"github.com/gorilla/rpc/v2/json2"
+	"github.com/snail007/rpc/v2"
+	"github.com/snail007/rpc/v2/json2"
 )
 
 type Hook struct {
