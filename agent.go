@@ -246,7 +246,7 @@ func serveWS(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 }
 func serveHTTP(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	w.Header().Set("Access-Control-Allow-Methods", "POST,OPTIONS")
 	if r.Method == "OPTIONS" {
 		return

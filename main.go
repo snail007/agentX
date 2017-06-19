@@ -5,9 +5,9 @@ import (
 	"agentX/plugins/systemx"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
-
 	"fmt"
+
+	"github.com/julienschmidt/httprouter"
 
 	"os"
 )
@@ -47,4 +47,5 @@ func initRpcWeb() {
 	router.Handle("POST", "/:token", serve)
 	router.Handle("OPTIONS", "/:token", serve)
 	go http.ListenAndServe(cfg.GetString("rpc.listen"), router)
+
 }

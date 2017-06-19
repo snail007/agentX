@@ -1,76 +1,74 @@
-
 <!DOCTYPE html>
 <html>
+
 <head>
-  <script src="jq.js"></script>
-  <link href="style.css" rel='stylesheet' type='text/css'>
-  <!--<link href="//fonts.googleapis.com/css?family=Inconsolata" rel='stylesheet' type='text/css'>-->
-  <script src="jquery.jsonrpc.js"></script>
-  <title></title>
+    <script src="jq.js"></script>
+    <link href="style.css" rel='stylesheet' type='text/css'>
+    <!--<link href="//fonts.googleapis.com/css?family=Inconsolata" rel='stylesheet' type='text/css'>-->
+    <script src="jquery.jsonrpc.js"></script>
+    <title></title>
 </head>
 
 <body style="padding:20px">
-  <div class="row">
-    <div class="large-2 columns"><input id="address" value="http://127.0.0.1:9091/"/></div>
-	
-    <div class="large-2 columns"><input id="method" value="system.Time"/></div>
-	<div class="large-2 columns"><input id="args" value=""/></div>
+    <div class="row">
+        <div class="large-2 columns"><input id="address" value="http://127.0.0.1:9091/" /></div>
 
-	<div class="large-1 columns"><a id="get" href="#" class="small button">Get&nbsp</a></div>
-	<div class="large-9 columns"></div>
-  </div>
-  <div class="row">
-    <div class="large-12 columns panel">
-	  <ul id="output" style="height:600px;overflow:scroll;list-style-type:none;">
-	  </ul>
+        <div class="large-2 columns"><input id="method" value="system.Time" /></div>
+        <div class="large-2 columns"><input id="args" value="" /></div>
+
+        <div class="large-1 columns"><a id="get" href="#" class="small button">Get&nbsp</a></div>
+        <div class="large-9 columns"></div>
     </div>
-  </div>
-  <script>
-      function log(m, label) {
+    <div class="row">
+        <div class="large-12 columns panel">
+            <ul id="output" style="height:600px;overflow:scroll;list-style-type:none;">
+            </ul>
+        </div>
+    </div>
+    <script>
+        function log(m, label) {
             msg = $("<li><span>" + m + "</span></li>");
             msg.find("span").addClass(label);
             out = $("#output");
             out.append(msg);
-            out.animate({"scrollTop": out[0].scrollHeight}, "fast");
+            out.animate({
+                "scrollTop": out[0].scrollHeight
+            }, "fast");
         }
 
-$(document).ready(function() {
-	$("#get").click(function() {
-        var args;
-        try{
-            args=eval("("+$("#args").val()+")")
-        }catch(e){
-            args=$("#args").val()
-        }
-		req = {
-			url:$("#address").val(),
-			method : $("#method").val(),
-			params : args,
-		};
-		log("<- " + JSON.stringify(req), "label");
-		$.jsonrpc(req, {
-            beforeSend:function(xhr){
-                        xhr.setRequestHeader('Authorization', 'Basic ' + btoa('myuser:mypswd'));
-            },
-			success : function(result) {
-				$("#get").addClass("success");
-				setTimeout(function() {
-					$("#get").removeClass("success");
-				}, 2000);
-				log("-> " + JSON.stringify(result), "success label");
-			},
-			error : function(error) {
-				$("#get").addClass("alert");
-				setTimeout(function() {
-					$("#get").removeClass("alert");
-				}, 2000);
-				log("-> " + JSON.stringify(error), "alert label");
-			},
-		});
-	});
-});
-
-  </script>
+        $(document).ready(function() {
+            $("#get").click(function() {
+                var args;
+                try {
+                    args = eval("(" + $("#args").val() + ")")
+                } catch (e) {
+                    args = $("#args").val()
+                }
+                req = {
+                    url: $("#address").val(),
+                    method: $("#method").val(),
+                    params: args,
+                };
+                log("<- " + JSON.stringify(req), "label");
+                $.jsonrpc(req, {
+                    success: function(result) {
+                        $("#get").addClass("success");
+                        setTimeout(function() {
+                            $("#get").removeClass("success");
+                        }, 2000);
+                        log("-> " + JSON.stringify(result), "success label");
+                    },
+                    error: function(error) {
+                        $("#get").addClass("alert");
+                        setTimeout(function() {
+                            $("#get").removeClass("alert");
+                        }, 2000);
+                        log("-> " + JSON.stringify(error), "alert label");
+                    },
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
