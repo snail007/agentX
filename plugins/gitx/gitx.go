@@ -21,6 +21,7 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/client"
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
@@ -84,14 +85,19 @@ func cleanBranch(url URL) (err error) {
 var branchNamePrefix = "refs/heads/auto-"
 
 func createBranchName(url URL) (name string, err error) {
-	// var hash string
+	var hash string
 	// var hashObj plumbing.Hash
 	var ref *plumbing.Reference
-	_, _, _, ref, err = getHash(url)
+	hash, _, _, ref, err = getHash(url)
 	if err != nil {
 		return
 	}
-	f := filepath.Base(ref.Name().Short())
+	f := ""
+	if ref != nil {
+		f = filepath.Base(ref.Name().Short())
+	} else {
+		f = hash
+	}
 	name = branchNamePrefix + f + "-" + newLenChars(8, stdChars)
 	return
 }
@@ -173,20 +179,7 @@ func createBranch(url URL) (branchShortName, branchName string, err error) {
 	err = r.Storer.SetReference(plumbing.NewHashReference(plumbing.ReferenceName(branchName), hashObj))
 	return
 }
-func headHash(url URL) (hash, name string, hashObj plumbing.Hash, err error) {
-	r, err := git.PlainOpen(url.PATH)
-	if err != nil {
-		return
-	}
-	h, err := r.Head()
-	if err != nil {
-		return
-	}
-	hash = h.Hash().String()
-	name = h.Name().Short()
-	hashObj = h.Hash()
-	return
-}
+
 func getHash(url URL) (hash string, hashObj plumbing.Hash, r *git.Repository, ref *plumbing.Reference, err error) {
 	if r, err = git.PlainOpen(url.PATH); err != nil {
 		return
@@ -208,7 +201,13 @@ func getHash(url URL) (hash string, hashObj plumbing.Hash, r *git.Repository, re
 		return nil
 	})
 	if hash == "" {
-		err = fmt.Errorf("reference not found")
+		var c *object.Commit
+		c, err = r.CommitObject(plumbing.NewHash(url.BRANCH))
+		if err == nil {
+			hash = url.BRANCH
+			hashObj = c.Hash
+			return
+		}
 	}
 	return
 }
