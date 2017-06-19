@@ -138,26 +138,7 @@ func (x *Gitx) Publish(in *URL, out *string) (err error) {
 		if _, err := os.Stat(p); err != nil || isEmpty(p) {
 			return errors.New("target path is not a git repository")
 		}
-		//if target is not a repository,git.PlainOpen
-		//will create two folders (objects,refs) in target path
-		objectsBeforeIsExists := false
-		refsBeforeIsExists := false
-		p1 := filepath.Join(p, "objects")
-		p2 := filepath.Join(p, "refs")
-		if _, err := os.Stat(p1); err == nil {
-			objectsBeforeIsExists = true
-		}
-		if _, err := os.Stat(p2); err == nil {
-			refsBeforeIsExists = true
-		}
 		_, err = git.PlainOpen(url.PATH)
-		if _, err := os.Stat(p1); err == nil && !objectsBeforeIsExists {
-			os.RemoveAll(p1)
-		}
-		if _, err := os.Stat(p2); err == nil && !refsBeforeIsExists {
-			os.RemoveAll(p2)
-		}
-		//clean objects,refs folder if necessary
 		if err == nil {
 			//fetch
 			_, err = fetch(url)
