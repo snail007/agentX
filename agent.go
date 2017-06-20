@@ -34,14 +34,14 @@ type RPCError struct {
 
 	// A String providing a short description of the error.
 	// The message SHOULD be limited to a concise single sentence.
-	Message string `json:"message"` /* required */
+	Message interface{} `json:"message"` /* required */
 
 	// A Primitive or Structured value that contains additional information about the error.
 	Data interface{} `json:"data"` /* optional */
 }
 
 func (e *RPCError) Error() string {
-	return e.Message
+	return fmt.Sprintf("%s", e.Message)
 }
 
 var null = json.RawMessage([]byte("null"))
@@ -84,11 +84,18 @@ var (
 func call(jsonBytes []byte) (r jsonRequest, w jsonResponse, jsonResponseString string) {
 	e := new(RPCError)
 	defer func() {
+		err1 := recover()
+		if err1 != nil {
+			e.Message = err1
+			e.Code = E_INTERNAL
+			w.Error = e
+		}
 		str, err := json.Marshal(w)
 		if err != nil {
 			e.Message = err.Error()
 			e.Code = E_INTERNAL
 			w.Error = e
+			jsonResponseString = string(str)
 			return
 		}
 		jsonResponseString = string(str)
