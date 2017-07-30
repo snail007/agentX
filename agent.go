@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -246,7 +247,8 @@ func serveWS(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		bufreader := bufio.NewReader(reader)
 		for {
 			var message []byte
-			message, _, err = bufreader.ReadLine()
+			message, err = bufreader.ReadBytes('\n')
+			message = bytes.TrimRight(message, "\r\n")
 			if err != nil {
 				break
 			}
