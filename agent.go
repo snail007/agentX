@@ -254,7 +254,7 @@ func serveWS(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 			err = c.WriteMessage(mt, []byte(j+"\n"))
 			if err != nil {
 				log.With(logger.Fields{"uri": r.RequestURI, "addr": r.RemoteAddr}).Warn("write:", err)
-				break
+				return
 			}
 		}
 	}
