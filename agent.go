@@ -1,13 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
-
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -235,19 +235,27 @@ func serveWS(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	}
 	defer c.Close()
 	for {
-		mt, message, err := c.ReadMessage()
+		mt, reader, err := c.NextReader()
 		if err != nil {
-			c.WriteMessage(mt, message)
+			c.WriteMessage(mt, []byte(err.Error()))
 			if websocket.IsCloseError(err) || websocket.IsUnexpectedCloseError(err) {
 				//log.Warn(err)
 			}
 			break
 		}
-		_, _, j := call(message)
-		err = c.WriteMessage(mt, []byte(j))
-		if err != nil {
-			log.With(logger.Fields{"uri": r.RequestURI, "addr": r.RemoteAddr}).Warn("write:", err)
-			break
+		bufreader := bufio.NewReader(reader)
+		for {
+			var message []byte
+			message, _, err = bufreader.ReadLine()
+			if err != nil {
+				break
+			}
+			_, _, j := call(message)
+			err = c.WriteMessage(mt, []byte(j+"\n"))
+			if err != nil {
+				log.With(logger.Fields{"uri": r.RequestURI, "addr": r.RemoteAddr}).Warn("write:", err)
+				break
+			}
 		}
 	}
 }
