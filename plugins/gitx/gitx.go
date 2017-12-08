@@ -16,7 +16,6 @@ import (
 	"strings"
 
 	"os"
-	"os/exec"
 
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
@@ -26,6 +25,8 @@ import (
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	gitssh "gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 )
+
+var branchNamePrefix = "refs/heads/auto-"
 
 type String string
 
@@ -42,13 +43,12 @@ type URL struct {
 }
 
 func checkout(name string, url URL) (output string, err error) {
-	cmd := exec.Command("git", "checkout", "-f", name)
-	cmd.Dir = url.PATH
-	var outputB []byte
-	outputB, err = cmd.CombinedOutput()
-	if err == nil {
-		output = string(outputB)
-	}
+	g, _ := git.PlainOpen(url.PATH)
+	w, _ := g.Worktree()
+	err = w.Checkout(&git.CheckoutOptions{
+		Branch: plumbing.ReferenceName("refs/heads/" + name),
+		Force:  true,
+	})
 	return
 }
 func cleanBranch(url URL) (err error) {
@@ -81,8 +81,6 @@ func cleanBranch(url URL) (err error) {
 	})
 	return
 }
-
-var branchNamePrefix = "refs/heads/auto-"
 
 func createBranchName(url URL) (name string, err error) {
 	var hash string
@@ -276,7 +274,10 @@ func getAuth(url URL) (auth transport.AuthMethod, err error) {
 		}
 		client.InstallProtocol("https", githttp.NewClient(customClient))
 		client.InstallProtocol("http", githttp.NewClient(customClient))
-		auth = githttp.NewBasicAuth(url.USER, url.PASSWORD)
+		auth = &githttp.BasicAuth{
+			Username: url.USER,
+			Password: url.PASSWORD,
+		}
 	} else {
 		if url.SSHKEYSALT != "" {
 			signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(url.SSHKEY), []byte(url.SSHKEYSALT))
